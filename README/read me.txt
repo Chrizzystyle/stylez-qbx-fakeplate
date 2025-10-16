@@ -1,0 +1,299 @@
+# Installation Guide - Fake Plate System
+
+## Step-by-Step Installation
+
+### 1. Create Resource Folder Structure
+
+Create the following folder structure in your server:
+
+```
+resources/
+└── [custom]/
+    └── fakeplate_system/
+        ├── fxmanifest.lua
+        ├── config.lua
+        ├── client/
+        │   └── main.lua
+        └── server/
+            └── main.lua
+```
+
+### 2. Copy Script Files
+
+Copy each script file into its corresponding location:
+
+- `fxmanifest.lua` → Root of fakeplate_system folder
+- `config.lua` → Root of fakeplate_system folder  
+- `client/main.lua` → client folder
+- `server/main.lua` → server folder
+
+### 3. Add Items to QBX Core
+
+Open `resources/[qbx]/qbx_core/shared/items.lua` and add these items anywhere in the items table:
+
+```lua
+fakeplate = {
+    name = 'fakeplate',
+    label = 'Fake License Plate',
+    weight = 500,
+    type = 'item',
+    image = 'fakeplate.png',
+    unique = false,
+    useable = true,
+    shouldClose = true,
+    combinable = nil,
+    description = 'A fake license plate to hide your vehicle identity'
+},
+
+fakeplate_remover = {
+    name = 'fakeplate_remover',
+    label = 'Plate Remover Tool',
+    weight = 300,
+    type = 'item',
+    image = 'fakeplate_remover.png',
+    unique = false,
+    useable = true,
+    shouldClose = true,
+    combinable = nil,
+    description = 'A tool to remove fake license plates'
+},
+```
+
+### 4. Register Useable Items
+
+**Option A: If using QBX Core with built-in useable items**
+
+Open `resources/[qbx]/qbx_core/server/main.lua` and add:
+
+```lua
+-- Add these where other CreateUseableItem calls are located
+
+QBCore.Functions.CreateUseableItem('fakeplate', function(source, item)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if Player.Functions.GetItemBySlot(item.slot) ~= nil then
+        TriggerClientEvent('fakeplate:client:applyPlate', source)
+    end
+end)
+
+QBCore.Functions.CreateUseableItem('fakeplate_remover', function(source, item)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if Player.Functions.GetItemBySlot(item.slot) ~= nil then
+        TriggerClientEvent('fakeplate:client:removePlate', source)
+    end
+end)
+```
+
+**Option B: If using a separate useable items resource**
+
+If you have a resource like `qb-smallresources` or custom useable items resource, add the code there instead.
+
+### 5. Add Item Images (Optional but Recommended)
+
+1. Create or download images named:
+   - `fakeplate.png`
+   - `fakeplate_remover.png`
+
+2. Add them to your inventory images folder:
+   - Default QBX: `resources/[qbx]/qbx_inventory/html/images/`
+   - QB: `resources/[qb]/qb-inventory/html/images/`
+
+3. Image dimensions: 150x150px (PNG format recommended)
+
+### 6. Add to server.cfg
+
+Open your `server.cfg` and add the resource:
+
+```cfg
+ensure fakeplate_system
+```
+
+**Important:** Make sure it's placed AFTER these resources:
+```cfg
+ensure qbx_core
+ensure oxmysql
+ensure qbx_inventory
+```
+
+### 7. Configure (Optional)
+
+Open `fakeplate_system/config.lua` and adjust settings if needed:
+
+```lua
+Config.ApplyTime = 5000 -- Time to apply (5 seconds)
+Config.RemoveTime = 3000 -- Time to remove (3 seconds)
+Config.UseOxLib = false -- Set true if using ox_lib for notifications
+```
+
+### 8. Restart Server
+
+**Full restart recommended for first installation:**
+
+1. Stop your server
+2. Clear cache if applicable
+3. Start server
+4. Check console for:
+   ```
+   [FakePlate] Loaded X fake plates from database
+   ```
+
+### 9. Test the System
+
+1. Give yourself the items:
+   ```
+   /giveitem fakeplate 1
+   /giveitem fakeplate_remover 1
+   ```
+
+2. Get in or near a vehicle
+3. Use the fake plate item
+4. Check the plate changed
+5. Store vehicle in garage
+6. Retrieve vehicle - plate should still be fake
+7. Use remover to restore original plate
+
+### 10. Integrate with Police Scripts (Important!)
+
+For the fake plates to work properly with police systems, you MUST integrate the exports:
+
+See `ANPR_BYPASS_GUIDE.md` for detailed integration instructions with:
+- Police MDT systems
+- ANPR camera systems  
+- Dispatch systems
+
+## Quick Integration Example
+
+In your police MDT plate search (server-side):
+
+```lua
+RegisterNetEvent('mdt:server:searchPlate', function(plate)
+    local src = source
+    
+    -- Add this check
+    local isFake = exports['fakeplate_system']:IsFakePlate(plate)
+    if isFake then
+        TriggerClientEvent('mdt:client:searchResult', src, nil)
+        return
+    end
+    
+    -- Rest of your normal search code
+    local result = MySQL.query.await('SELECT * FROM player_vehicles WHERE plate = ?', {plate})
+    TriggerClientEvent('mdt:client:searchResult', src, result)
+end)
+```
+
+## Verification Checklist
+
+- [ ] Resource folder created correctly
+- [ ] All script files copied
+- [ ] Items added to qbx_core/shared/items.lua
+- [ ] Useable items registered
+- [ ] Resource added to server.cfg
+- [ ] Server restarted
+- [ ] Database table created (check database)
+- [ ] Items work in-game
+- [ ] Plates persist after restart
+- [ ] Vehicle storage works
+- [ ] Garage storage/retrieval works
+- [ ] Police integration completed (optional but recommended)
+
+## Common Installation Issues
+
+**"Script failed to start"**
+- Check fxmanifest.lua syntax
+- Ensure all files are in correct locations
+- Check server console for specific errors
+
+**"Items don't show in inventory"**
+- Make sure items are added to items.lua correctly
+- Restart qbx_core: `/restart qbx_core`
+- Check for syntax errors in items.lua
+
+**"Can't use items"**
+- Verify useable items are registered
+- Check server console when using item
+- Ensure client/server communication is working
+
+**"Database errors"**
+- Ensure oxmysql is running
+- Check MySQL credentials are correct
+- Verify database permissions
+
+**"Plates don't persist"**
+- Check database table was created
+- Verify oxmysql connection
+- Check console for SQL errors
+
+## Need Help?
+
+1. Enable debug mode: `Config.Debug = true`
+2. Check server console for errors
+3. Use `/checkplate` command near vehicle (debug mode only)
+4. Verify all dependencies are installed and running
+
+## Dependencies Required
+
+- ✅ QBX Core (or QB-Core)
+- ✅ oxmysql
+- ✅ qbx_inventory (or qb-inventory)
+- ⭕ ox_lib (optional - for better notifications/progress)
+
+That's it! Your fake plate system should now be fully operational.
+
+New Features
+1. Steal License Plates from NPC Vehicles
+
+Use the Plate Removal Tool on NPC vehicles to steal their license plates
+Stolen plates are given as items that can be applied to your own vehicles
+Takes 15 seconds to steal a plate (configurable)
+
+2. NPC Reactions
+
+NPCs can react when you steal their license plates
+Attack Chance: NPC will exit vehicle and attack you with a weapon (35% default)
+Flee Chance: NPC will panic and flee (40% default)
+Do Nothing: NPC is too scared to react (25% default)
+
+Configurable Weapons for NPCs:
+
+Pistol
+Combat Pistol
+Knife
+Baseball Bat
+Crowbar
+
+You can customize NPC accuracy, combat range, and weapon selection in the config.
+3. Police Notifications
+
+Random chance police are notified during illegal activities:
+
+45% chance when stealing plates (configurable)
+25% chance when removing fake plates (configurable)
+
+
+Requires minimum number of police online (configurable, default 0)
+Creates a dispatch blip for police officers
+
+Supported Dispatch Systems:
+
+ps-dispatch
+cd_dispatch
+qs-dispatch
+core_dispatch
+Custom (specify your own event)
+
+4. Extended Removal Time
+
+Removing fake plates now takes 20 seconds (as requested)
+Gives police more time to respond if notified
+
+5. Plate Removal Tool Menu
+When using the Plate Removal Tool, you now get a menu with two options:
+
+Remove Fake Plate - Remove a fake plate from a vehicle
+Steal License Plate - Steal a plate from a nearby NPC vehicle
+
+6. Stolen Plate Item
+
+Stolen plates are stored as items with metadata containing the plate number
+Can be applied to any vehicle you own
+Acts as a fake plate when applied

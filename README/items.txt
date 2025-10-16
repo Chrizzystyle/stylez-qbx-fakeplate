@@ -1,0 +1,45 @@
+-- Add these items to your qbx_core/shared/items.lua file
+
+fakeplate = {
+    name = 'fakeplate',
+    label = 'Fake License Plate',
+    weight = 500,
+    type = 'item',
+    image = 'fakeplate.png',
+    unique = false,
+    useable = true,
+    shouldClose = true,
+    combinable = nil,
+    description = 'A fake license plate to hide your vehicle identity'
+},
+
+fakeplate_remover = {
+    name = 'fakeplate_remover',
+    label = 'Plate Remover Tool',
+    weight = 300,
+    type = 'item',
+    image = 'fakeplate_remover.png',
+    unique = false,
+    useable = true,
+    shouldClose = true,
+    combinable = nil,
+    description = 'A tool to remove fake license plates'
+},
+
+
+--If you want it to decay per use 
+
+fakeplate_remover = {
+    name = 'fakeplate_remover',
+    label = 'Plate Remover Tool',
+    weight = 300,
+    type = 'item',
+    image = 'fakeplate_remover.png',
+    unique = false,
+    useable = true,
+    shouldClose = true,
+    combinable = nil,
+    description = 'A tool to remove fake license plates',
+    consume = 0.1, -- 10 uses before breaking
+    degrade = 0, -- No time-based degradation
+},

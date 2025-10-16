@@ -324,6 +324,7 @@ RegisterNetEvent('fakeplate:client:stealPlate', function()
     lib.callback('fakeplate:server:isPlayerVehicle', false, function(isPlayerVeh)
         if isPlayerVeh then
             Notify('You cannot steal plates from owned vehicles', 'error')
+            isStealingPlate = false
             return
         end
         

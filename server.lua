@@ -73,16 +73,17 @@ local function NotifyPolice(coords, type)
     
     -- Send to appropriate dispatch system
     if Config.PoliceNotification.DispatchSystem == 'ps-dispatch' then
-        exports['ps-dispatch']:CustomAlert({
-            coords = vector3(coords.x, coords.y, coords.z),
+        exports['ps-dispatch']:SuspiciousActivity({
             message = dispatchData.message,
-            dispatchCode = Config.DispatchBlip.Code,
+            codeName = Config.DispatchBlip.Code,
+            code = Config.DispatchBlip.Code,
+            icon = Config.DispatchBlip.Sprite,
+            priority = 2,
+            coords = vector3(coords.x, coords.y, coords.z),
+            gender = 1,
+            street = GetStreetNameFromHashKey(GetStreetNameAtCoord(coords.x, coords.y, coords.z)),
             description = type == 'steal' and 'Someone is stealing a license plate' or 'Suspicious activity with vehicle plates',
-            radius = 0,
-            sprite = Config.DispatchBlip.Sprite,
-            color = Config.DispatchBlip.Color,
-            scale = Config.DispatchBlip.Scale,
-            length = 3,
+            jobs = Config.PoliceNotification.PoliceJobs
         })
     elseif Config.PoliceNotification.DispatchSystem == 'cd_dispatch' then
         local data = exports['cd_dispatch']:GetPlayerInfo()
@@ -261,10 +262,21 @@ RegisterNetEvent('fakeplate:server:stealPlate', function(plate)
         return
     end
     
-    -- Remove the tool item
-    if not Player.Functions.RemoveItem(Config.FakePlateRemoverItem, 1) then
+    -- Check if player has reached max fake plates
+    local fakePlateItem = Player.Functions.GetItemByName(Config.FakePlateItem)
+    local currentAmount = fakePlateItem and fakePlateItem.amount or 0
+    
+    if Config.MaxFakePlates > 0 and currentAmount >= Config.MaxFakePlates then
+        TriggerClientEvent('ox_lib:notify', src, {
+            title = 'Fake Plates',
+            description = 'You cannot carry more than ' .. Config.MaxFakePlates .. ' fake plates',
+            type = 'error'
+        })
         return
     end
+    
+    -- Don't consume the remover tool when stealing plates
+    -- Only consume it when removing fake plates
     
     -- Give fake plate item
     Player.Functions.AddItem(Config.FakePlateItem, 1)

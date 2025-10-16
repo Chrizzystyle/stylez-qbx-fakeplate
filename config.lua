@@ -19,6 +19,9 @@ Config.StealPlateTime = 15000 -- Time to steal a plate from NPC vehicle
 -- Fake plate format (generates random plates)
 Config.PlateFormat = '########' -- # = random letter or number
 
+-- Maximum fake plates a player can carry (0 = unlimited)
+Config.MaxFakePlates = 5 -- Set to 0 for unlimited
+
 -- NPC Reaction Settings
 Config.NPCReaction = {
     Enabled = true, -- Enable NPC reactions when stealing plates
