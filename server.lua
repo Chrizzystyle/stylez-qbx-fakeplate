@@ -86,12 +86,11 @@ local function NotifyPolice(coords, type)
             jobs = Config.PoliceNotification.PoliceJobs
         })
     elseif Config.PoliceNotification.DispatchSystem == 'cd_dispatch' then
-        local data = exports['cd_dispatch']:GetPlayerInfo()
-        TriggerEvent('cd_dispatch:AddNotification', {
+        TriggerClientEvent('cd_dispatch:AddNotification', -1, {
             job_table = Config.PoliceNotification.PoliceJobs,
             coords = coords,
             title = Config.DispatchBlip.Code .. ' - ' .. dispatchData.message,
-            message = 'Suspicious activity reported at ' .. data.street,
+            message = 'A ' .. Config.DispatchBlip.Code .. ' has been reported',
             flash = 0,
             unique_id = tostring(math.random(0000000, 9999999)),
             blip = {
@@ -100,7 +99,7 @@ local function NotifyPolice(coords, type)
                 colour = Config.DispatchBlip.Color,
                 flashes = false,
                 text = Config.DispatchBlip.Code,
-                time = Config.DispatchBlip.Duration,
+                time = (Config.DispatchBlip.Duration / 1000),
             }
         })
     elseif Config.PoliceNotification.DispatchSystem == 'qs-dispatch' then
